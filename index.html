@@ -151,7 +151,7 @@ $.fn.csb = function(options){
   var buttonWidth  = 16; // Default: User-defined
   var buttonHeight = 16; // Default: User-defined
   var thumbWidth   = 16; // Default: User-defined
-  var thumbHeight  = -1; // Default: User-defined
+  var thumbHeight  =  0; // Default: User-defined
   var trackWidth   = 16; // Default: User-defined
   var newScrollPosition;
   var cs;    // The custom scrollbar container
@@ -223,8 +223,12 @@ $.fn.csb = function(options){
     $(down).css("height", buttonHeight);
 
     // Calculate the thumb height
-    if(!thumbHeight)
-      thumbHeight = 64;
+    if(!thumbHeight){
+      var trackHeight = parseFloat($(track).css("height"));
+      console.log(trackHeight);
+      thumbHeight = trackHeight / 2;
+      console.log(thumbHeight);
+    }
 
     $(thumb).css("width",  thumbWidth  + "px");
     $(thumb).css("height", thumbHeight + "px");
@@ -337,10 +341,12 @@ var options = {
   "step": 10,
   "buttonWidth": 4,
   "buttonHeight": 20,
-  "thumbWidth": 1,
+  "thumbWidth": 100,
   "thumbHeight": 50,
   "trackWidth": 50
 };
+
+options = {};
 
 $("#main_content").csb(options);
 
