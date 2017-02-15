@@ -171,7 +171,7 @@ $.fn.csb = function(){
 
     // Calculate the thumb height
     var thumbWidth = 16;
-    var thumbHeight = 16;
+    var thumbHeight = 64;
     $(thumb).css("width", thumbWidth + "px");
     $(thumb).css("height", thumbHeight + "px");
 
@@ -181,12 +181,12 @@ $.fn.csb = function(){
 
     // Up and Down arrow buttons are both 16x16
     // Thumb height is 16px high
-    // Therefore, decrease the track sliding length by 48 = 16*2 + 16
-    var offsetHeight2 = this.offsetHeight - 48;
+    // Therefore, decrease the track sliding length by 48 = 16*2 + 64
+    var offsetHeight2 = this.offsetHeight - 96;
 
     // var scrollPercentage = this.scrollTop / (this.scrollHeight - this.offsetHeight) * this.offsetHeight;
     var delta = this.scrollTop / (this.scrollHeight - this.offsetHeight);
-    var scrollPercentage = delta * offsetHeight2 + 16;
+    var scrollPercentage = delta * offsetHeight2 + 16; // 16 = Height of one button
 
     $(thumb).css("top", scrollPercentage);
 
@@ -229,14 +229,30 @@ $.fn.csb = function(){
 
   function ClickOnTrack(event){
     event.preventDefault();
-    var posY = $(this).offset().top;
-    var clickHeight = event.pageY - posY;
-    var height = parseFloat($(track).css("height"));
-    var percent = clickHeight / height;
-    var scrollPercentage = percent * (mainContent.scrollHeight - mainContent.offsetHeight);
+    var offsetY = $(this).offset().top;
+    var clickHeight = event.pageY - offsetY;
+    var trackHeight = parseFloat($(track).css("height"));
+    var thumbHeight = parseFloat($(thumb).css("height"));
+    var upperMargin = thumbHeight/2;
+    var lowerMargin = trackHeight - thumbHeight/2;
+    var trackHeightNoMargin = lowerMargin - upperMargin;
+    var trackMultiplier = 100 / trackHeightNoMargin;
+    var delta = mainContent.scrollHeight - mainContent.offsetHeight;
+    var percent;
+
+    // If the user clicked in the upper or lower margin of the scrollbar,
+    // it would act like the user clicked on the boundary of the margin instead
+    if(clickHeight < upperMargin)       clickHeight = upperMargin;
+    else if(clickHeight > lowerMargin) clickHeight = lowerMargin;
+
+    // Remove the margin so that we can calculate the percentage
+    clickHeight -= upperMargin;
+
+    // Finally, find the percentage and set it
+    percent = ((clickHeight * trackMultiplier) / 100) * delta;
 
     $(mainContent).stop().animate({
-      scrollTop: scrollPercentage
+      scrollTop: percent
     }, delay);
   }
 
