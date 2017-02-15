@@ -88,7 +88,7 @@ html, body{
   height: 100%;
 }
 .custom-scrollbar > .track{
-  position: absolute;
+  position: relative;
   width: 100%;
   height: 100%;
 }
@@ -99,17 +99,13 @@ html, body{
 }
 .custom-scrollbar > .up,
 .custom-scrollbar > .down{
-  position: absolute;
+  position: relative;
   width: 100%;
   height: 16px; /* CHANGE THIS! IT IS VARIABLE OR USER-DEFINED! */
 }
 .custom-scrollbar > .up{
-  background-color: cyan;
-  top: 0%;
 }
 .custom-scrollbar > .down{
-  background-color: lightgreen;
-  bottom: 0%;
 }
 </style>
 
@@ -146,25 +142,42 @@ html, body{
 <script>
 
 $.fn.csb = function(){
-  // ssb_onscroll = function(){
-  function ssb_onscroll(){
-    var cs = $(this).parent().find(".custom-scrollbar");
+  var mainContent = $(this)[0];
+  var step  = 10;
+  var delay = 100;
+  var newScrollPosition;
+
+  function Scroll(){
+    var cs    = $(this).parent().find(".custom-scrollbar");
     var track = $(cs).find(".track");
     var thumb = $(cs).find(".thumb");
+    var up    = $(cs).find(".up");
+    var down  = $(cs).find(".down");
 
     // offsetHeight: Stays the same = Height of the scrollable element               [335]
     // scrollHeight: Stays the same = Total height of all content within the element [882]
     // scrollTop:    Goes from 0 to (offsetHeight - scrollHeight)                    [0-547]
-    console.log(`offsetHeight = ${this.offsetHeight} | scrollHeight = ${this.scrollHeight} | scrollTop = ${this.scrollTop}`);
-    console.log(`Scroll Percentage = ${this.scrollTop / (this.scrollHeight-this.offsetHeight) * 100}%`);
+
+    // console.log(`offsetHeight = ${this.offsetHeight} | scrollHeight = ${this.scrollHeight} | scrollTop = ${this.scrollTop}`);
+    // console.log(`Scroll Percentage = ${this.scrollTop / (this.scrollHeight-this.offsetHeight) * 100}%`);
 
     // Set padding-right to the width of the default scrollbar
     var scrollbarWidth = this.offsetWidth - this.clientWidth + "px";
     $(this).css("padding-right", scrollbarWidth);
 
+    // These can be user-defined, but 16x16 is the defaults
+    var buttonWidth = 16;
+    var buttonHeight = 16;
+
     // Calculate the thumb height
-    var thumbHeight = "16px";
-    $(thumb).css("height", thumbHeight);
+    var thumbWidth = 16;
+    var thumbHeight = 16;
+    $(thumb).css("width", thumbWidth + "px");
+    $(thumb).css("height", thumbHeight + "px");
+
+    var yoloSwag = this.offsetHeight - (buttonHeight * 2);
+    $(track).css("height", yoloSwag + "px");
+    // $(track).css("top", 16 + "px");
 
     // Up and Down arrow buttons are both 16x16
     // Thumb height is 16px high
@@ -173,7 +186,6 @@ $.fn.csb = function(){
 
     // var scrollPercentage = this.scrollTop / (this.scrollHeight - this.offsetHeight) * this.offsetHeight;
     var delta = this.scrollTop / (this.scrollHeight - this.offsetHeight);
-
     var scrollPercentage = delta * offsetHeight2 + 16;
 
     $(thumb).css("top", scrollPercentage);
@@ -181,31 +193,77 @@ $.fn.csb = function(){
     $(cs).css("width", "16px");               // USER-DEFINED!
     $(track).css("background-color", "gray"); // USER-DEFINED!
 
-    // this.ratio = (this.offsetHeight - 2 * this.sw) / this.scrollHeight;
-    // this.sb.style.top = Math.floor(this.sw + this.scrollTop * this.ratio) + 'px';
+    if(delta == 0) $(up).css("background-color", "cyan");
+    else           $(up).css("background-color", "blue");
+
+    if(delta == 1) $(down).css("background-color", "lightgreen");
+    else           $(down).css("background-color", "green");
   }
 
-  // console.log(this[0].className);
-  // console.log(this[0].id);
+  function ScrollWithButton(){
+    var newScrollPosition;
+
+    if($(ScrollWithButton.self).hasClass("up")){
+      newScrollPosition = (mainContent.scrollTop - step);
+      console.log(newScrollPosition);
+      if(newScrollPosition < 0)
+        newScrollPosition = 0;
+    }else{
+      newScrollPosition = (mainContent.scrollTop + step);
+      if(newScrollPosition > mainContent.scrollHeight - mainContent.offsetHeight)
+        newScrollPosition = mainContent.scrollHeight - mainContent.offsetHeight;
+    }
+
+    $(mainContent).stop().animate({
+      scrollTop: newScrollPosition
+    }, delay);
+  }
+
+  function ButtonClick(event){
+    event.preventDefault();
+    ScrollWithButton.self = this;
+    ScrollWithButton();
+    var timeout = setInterval(ScrollWithButton, delay);
+    $(document).mouseup(function(){clearInterval(timeout);});
+  }
+
+  function ClickOnTrack(event){
+    event.preventDefault();
+    var posY = $(this).offset().top;
+    var clickHeight = event.pageY - posY;
+    var height = parseFloat($(track).css("height"));
+    var percent = clickHeight / height;
+    var scrollPercentage = percent * (mainContent.scrollHeight - mainContent.offsetHeight);
+
+    $(mainContent).stop().animate({
+      scrollTop: scrollPercentage
+    }, delay);
+  }
 
   var qwe = this.parent().append(`
   <div class="custom-scrollbar">
-    <div class="track"></div>
-    <div class="thumb"></div>
     <div class="up"></div>
+    <div class="track"></div>
     <div class="down"></div>
+    <div class="thumb"></div>
   </div>
   `);
-  qwe.prepend(this);
 
-  $(this).scroll(ssb_onscroll);
+  qwe.prepend(this);
+  $(this).scroll(Scroll);
+  var up    = $(this).parent().find(".up");
+  var down  = $(this).parent().find(".down");
+  var track = $(this).parent().find(".track");
+  var thumb = $(this).parent().find(".thumb");
+  $(up).mousedown(ButtonClick);
+  $(down).mousedown(ButtonClick);
+  $(track).mousedown(ClickOnTrack);
   $(this).trigger("scroll");
 }
 
 window.onload = function(){
   // Initialize the custom scrollbar
   $("#main_content").csb();
-
   // ssb.scrollbar("#main_content");
 }
 
