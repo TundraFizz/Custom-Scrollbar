@@ -53,12 +53,13 @@ body{
   width: 80%;     /* Horizontal align */
 }
 .inner{
-  display: flex;
+  position: relative;
   height: 50%;
   width: 100%;
   margin: auto 0px;
   background: #fff;
   border: 1px #000 solid;
+  overflow: hidden;
 }
 #main_content{
   position: relative;
@@ -68,6 +69,47 @@ body{
 }
 #main_content > div{
   /*margin: 0px;*/
+}
+
+html, body{
+  overflow: hidden;
+  height: 100%;
+}
+
+#main_content{
+  overflow: auto;
+  width: 100%;
+  height: 100%;
+}
+
+.custom-scrollbar{
+  position: absolute;
+  top: 0px;
+  height: 100%;
+}
+.custom-scrollbar > .track{
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+.custom-scrollbar > .thumb{
+  position: absolute;
+  width: 100%;
+  background-color: gold;
+}
+.custom-scrollbar > .up,
+.custom-scrollbar > .down{
+  position: absolute;
+  width: 100%;
+  height: 16px; /* CHANGE THIS! IT IS VARIABLE OR USER-DEFINED! */
+}
+.custom-scrollbar > .up{
+  background-color: cyan;
+  top: 0%;
+}
+.custom-scrollbar > .down{
+  background-color: lightgreen;
+  bottom: 0%;
 }
 </style>
 
@@ -91,6 +133,10 @@ body{
         <div>Proin consectetur, nulla eget pellentesque vestibulum, dui nisi tempor dolor, vel ultricies nulla ex vitae dolor. Etiam facilisis mi orci, eu facilisis lorem aliquet non. Duis pellentesque nibh sit amet varius laoreet. Vivamus viverra augue tellus, ornare mollis tellus mattis eu. Phasellus velit metus, feugiat ultricies ultrices sit amet, ullamcorper dapibus mi. In hac habitasse platea dictumst. Vivamus non porta nulla.</div>
         <div>Interdum et malesuada fames ac ante ipsum primis in faucibus. Nulla sit amet metus ut enim interdum ultricies. Ut vitae erat quis massa ultrices rhoncus. Quisque dapibus scelerisque neque, suscipit rhoncus dui sodales in. Sed tincidunt molestie sem nec consequat. Nam id purus sem. Nunc sagittis imperdiet ligula, et ultrices neque dictum eu. Mauris ultrices volutpat cursus. Vestibulum placerat nulla et tincidunt laoreet. Aliquam nisi erat, cursus ac faucibus quis, sollicitudin sed nisi.</div>
         <div>Sed ac nulla sit amet felis vestibulum sollicitudin id ullamcorper tellus. Nam semper odio felis, et pellentesque enim vulputate quis. Nulla fermentum lectus orci, quis ultrices lacus egestas rhoncus. Nullam vestibulum lobortis mi, vitae convallis orci pretium quis. Donec eget enim vel leo cursus mattis molestie sollicitudin dolor. Duis placerat erat vel felis maximus, quis pharetra augue varius. Donec bibendum malesuada eros sit amet facilisis. Phasellus condimentum, ipsum nec finibus viverra, diam enim gravida nisi, in dapibus turpis mi eget nisi. Maecenas a massa ligula.</div>
+        <div>Duis rhoncus ex nec ante condimentum fringilla. Aliquam felis augue, tristique et justo in, posuere porta sem. Fusce gravida euismod facilisis. Nunc feugiat condimentum orci eu lacinia. Cras non consectetur velit. Suspendisse lacinia gravida massa at dictum. In non velit quis nulla congue tempor. Integer lobortis suscipit lorem ac sollicitudin.</div>
+        <div>Duis luctus nibh iaculis, porta erat ac, pulvinar mauris. Aenean vel nunc turpis. Nam a maximus quam, id faucibus erat. Etiam porttitor vulputate rutrum. Phasellus blandit semper augue non posuere. Cras egestas eros vitae laoreet gravida. Donec id tortor metus. Pellentesque turpis nulla, tempor vel blandit quis, sollicitudin vel ipsum. Fusce venenatis elit et sapien maximus fermentum. Proin a dui vitae felis vestibulum auctor at eget turpis. Phasellus vulputate semper volutpat. Vivamus vulputate sapien vel lacus sollicitudin, at pharetra arcu elementum. Donec eu luctus ex. Nunc eget dapibus orci.</div>
+        <div>Donec tempor placerat posuere. Suspendisse potenti. Donec faucibus pellentesque ornare. Maecenas semper rhoncus rutrum. In tincidunt risus a auctor faucibus. Pellentesque placerat convallis dolor, quis accumsan nisl gravida sed. Vivamus vitae ligula justo. Suspendisse pulvinar diam eget tellus commodo varius. Proin a libero rhoncus, pharetra dui mattis, imperdiet lectus.</div>
+        <div>Nam et ante a nunc gravida gravida. Sed congue tristique molestie. Donec ut leo ante. Nulla sollicitudin mauris sed tortor porttitor consequat. Vestibulum vitae felis quis nisi euismod tempus ut sed magna. Sed cursus massa quis aliquet faucibus. Aenean sed scelerisque purus. Curabitur lacus diam, malesuada ac magna dignissim, fringilla efficitur mauris. Integer fermentum erat ac massa dignissim volutpat. Cras ullamcorper consequat est nec suscipit. Maecenas finibus mollis dolor sed sodales. Integer commodo, lorem et vehicula convallis, nunc mi tristique nisl, ac suscipit libero tortor quis lectus. Maecenas quis convallis turpis. Pellentesque vitae magna ultrices, blandit odio ut, placerat lectus. Suspendisse fermentum porttitor turpis eu dignissim. Ut porttitor tristique arcu, non tristique lacus molestie dignissim.</div>
       </div>
     </div>
   </div>
@@ -100,157 +146,66 @@ body{
 <script>
 
 $.fn.csb = function(){
-  var aConts = [];
-  var self   = this;
-  var mouseY = 0;
-  var asd    = 0; // Active scrollbar element
-  var sc     = 0;
-  var sp     = 0;
-  var to     = 0;
-  var N      = 0;
-  scrollbar();
+  // ssb_onscroll = function(){
+  function ssb_onscroll(){
+    var cs = $(this).parent().find(".custom-scrollbar");
+    var track = $(cs).find(".track");
+    var thumb = $(cs).find(".thumb");
 
-  function scrollbar(){
-    // perform initialization
-    if(!init())
-      return false;
+    // offsetHeight: Stays the same = Height of the scrollable element               [335]
+    // scrollHeight: Stays the same = Total height of all content within the element [882]
+    // scrollTop:    Goes from 0 to (offsetHeight - scrollHeight)                    [0-547]
+    console.log(`offsetHeight = ${this.offsetHeight} | scrollHeight = ${this.scrollHeight} | scrollTop = ${this.scrollTop}`);
+    console.log(`Scroll Percentage = ${this.scrollTop / (this.scrollHeight-this.offsetHeight) * 100}%`);
 
-    var selfClone = self.clone(false);
-    selfClone.css("overflow", "hidden");
-    self.html("");
-    self.append(selfClone);
+    // Set padding-right to the width of the default scrollbar
+    var scrollbarWidth = this.offsetWidth - this.clientWidth + "px";
+    $(this).css("padding-right", scrollbarWidth);
 
-    // selfClone.append(self);
-    self.css("position", "absolute");
-    self.css("left",     "0px");
-    self.css("top",      "0px");
-    self.css("width",    "100%");
-    self.css("height",   "100%");
+    // Calculate the thumb height
+    var thumbHeight = "16px";
+    $(thumb).css("height", thumbHeight);
 
-    // adding new container into array
-    aConts[N++] = self;
-    self.sg = false;
+    // Up and Down arrow buttons are both 16x16
+    // Thumb height is 16px high
+    // Therefore, decrease the track sliding length by 48 = 16*2 + 16
+    var offsetHeight2 = this.offsetHeight - 48;
 
-    //creating scrollbar child elements
-    self.st = CreateDiv("ssb_st", selfClone, self);
-    self.sb = CreateDiv("ssb_sb", selfClone, self);
-    self.su = CreateDiv("ssb_up", selfClone, self);
-    self.sd = CreateDiv("ssb_down", selfClone, self);
-    // self.st = CreateDiv("ssb_st", self, selfClone);
-    // self.sb = CreateDiv("ssb_sb", self, selfClone);
-    // self.su = CreateDiv("ssb_up", self, selfClone);
-    // self.sd = CreateDiv("ssb_down", self, selfClone);
+    // var scrollPercentage = this.scrollTop / (this.scrollHeight - this.offsetHeight) * this.offsetHeight;
+    var delta = this.scrollTop / (this.scrollHeight - this.offsetHeight);
 
-    // on mouse down processing
-    self.sb.onmousedown = function (e){
-      if (!this.self.sg){
-        if (! e) e = window.event;
-        ssb.asd = this.self;
-        this.self.yZ = e.screenY;
-        this.self.sZ = self.scrollTop;
-        this.self.sg = true;
-        // new class name
-        this.className = "ssb_sb ssb_sb_down";
-      }
-      return false;
-    }
+    var scrollPercentage = delta * offsetHeight2 + 16;
 
-    // on mouse down on free track area - move our scroll element too
-    self.st.onmousedown = function (e){
-      if (! e) e = window.event;
-      ssb.asd = this.self;
-      ssb.mouseY = e.clientY + document.body.scrollTop + document.documentElement.scrollTop;
-      for (var o = this.self, y = 0; o != null; o = o.offsetParent) y += o.offsetTop;
-      this.self.scrollTop = (ssb.mouseY - y - (this.self.ratio * this.self.offsetHeight / 2) - this.self.sw) / this.self.ratio;
-      this.self.sb.onmousedown(e);
-    }
+    $(thumb).css("top", scrollPercentage);
 
-    // onmousedown events
-    self.su.onmousedown = self.su.ondblclick = function (e) { ssb.mousedown(this, -1); return false; }
-    self.sd.onmousedown = self.sd.ondblclick = function (e) { ssb.mousedown(this,  1); return false; }
-    //onmouseout events
-    self.su.onmouseout = self.su.onmouseup = clear;
-    self.sd.onmouseout = self.sd.onmouseup = clear;
-    // on mouse over - apply custom class name: ssb_sb_over
-    self.sb.onmouseover = function (e){
-      if (! this.self.sg) this.className = 'ssb_sb ssb_sb_over';
-      return false;
-    }
+    $(cs).css("width", "16px");               // USER-DEFINED!
+    $(track).css("background-color", "gray"); // USER-DEFINED!
 
-    // on mouse out - revert back our usual class name 'ssb_sb'
-    self.sb.onmouseout  = function (e){
-      if (! this.self.sg) this.className = 'ssb_sb';
-      return false;
-    }
-
-    // onscroll - change positions of scroll element
-    self.ssb_onscroll = function (){
-      this.ratio = (this.offsetHeight - 2 * this.sw) / this.scrollHeight;
-      this.sb.style.top = Math.floor(this.sw + this.scrollTop * this.ratio) + 'px';
-    }
-
-    // scrollbar width
-    self.sw = 20;
-    // start scrolling
-    self.ssb_onscroll();
-    refresh();
-    // binding own onscroll event
-    self.onscroll = self.ssb_onscroll;
-    return self;
+    // this.ratio = (this.offsetHeight - 2 * this.sw) / this.scrollHeight;
+    // this.sb.style.top = Math.floor(this.sw + this.scrollTop * this.ratio) + 'px';
   }
 
-  function init(){
-    if(window.oper || (! window.addEventListener && ! window.attachEvent))
-      return false;
+  // console.log(this[0].className);
+  // console.log(this[0].id);
 
-    // temp inner function for event registration
-    function addEvent(o, e, f){
-      if(window.addEventListener){
-        o.addEventListener(e, f, false);
-        this.w3c = true;
-        return true;
-      }
+  var qwe = this.parent().append(`
+  <div class="custom-scrollbar">
+    <div class="track"></div>
+    <div class="thumb"></div>
+    <div class="up"></div>
+    <div class="down"></div>
+  </div>
+  `);
+  qwe.prepend(this);
 
-      if(window.attachEvent)
-        return o.attachEvent("on" + e, f);
-      return false;
-    }
+  $(this).scroll(ssb_onscroll);
+  $(this).trigger("scroll");
+}
 
-    // binding events
-    addEvent(window.document, "mousemove", this.onmousemove);
-    addEvent(window.document, "mouseup", this.onmouseup);
-    addEvent(window, "resize", this.refresh);
-    return true;
-  }
-
-  function CreateDiv(c, cont, selfClone){
-    var o = document.createElement("div");
-    o.cont = cont;
-    o.className = c;
-    selfClone.append(o);
-    return o;
-  }
-
-  function clear(){
-    clearTimeout(ssb.to);
-    ssb.sc = 0;
-    return false;
-  }
-
-  function refresh(){
-    for (var i = 0, N = N; i < N; i++){
-    var o = aConts[i];
-    o.ssb_onscroll();
-    o.sb.style.width = o.st.style.width = o.su.style.width = o.su.style.height = o.sd.style.width = o.sd.style.height = o.sw + 'px';
-    o.sb.style.height = Math.ceil(Math.max(o.sw * .5, o.ratio * o.offsetHeight) + 1) + 'px';
-    }
-  }
-};
-
-$("#main_content").csb();
-
-window.onload = function() {
+window.onload = function(){
   // Initialize the custom scrollbar
+  $("#main_content").csb();
+
   // ssb.scrollbar("#main_content");
 }
 
@@ -284,7 +239,7 @@ var ssb = {
     ssb.aConts[ssb.N++] = cont;
     cont.sg = false;
 
-    //creating scrollbar child elements
+    // creating scrollbar child elements
     cont.st = this.create_div('ssb_st', cont, cont_clone);
     cont.sb = this.create_div('ssb_sb', cont, cont_clone);
     cont.su = this.create_div('ssb_up', cont, cont_clone);
