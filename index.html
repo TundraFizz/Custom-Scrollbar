@@ -58,7 +58,6 @@ body{
   width: 100%;
   margin: auto 0px;
   background: #fff;
-  border: 1px #000 solid;
   overflow: hidden;
 }
 #main_content{
@@ -85,6 +84,7 @@ html, body{
 .custom-scrollbar{
   position: absolute;
   top: 0px;
+  /*right: 0px;*/ /* THIS IS CORRECT AND MAKES IT ON THE RIGHT SIDE */
   height: 100%;
 }
 .custom-scrollbar > .track{
@@ -101,7 +101,6 @@ html, body{
 .custom-scrollbar > .down{
   position: relative;
   width: 100%;
-  height: 16px; /* CHANGE THIS! IT IS VARIABLE OR USER-DEFINED! */
 }
 .custom-scrollbar > .up{
 }
@@ -111,11 +110,11 @@ html, body{
 
 <!DOCTYPE html>
 <html>
-<head>
-  <title>Testing</title>
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
-</head>
-<body>
+  <head>
+    <title>Testing</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+  </head>
+  <body>
   <div class="outer">
     <div class="inner">
       <div id="main_content">
@@ -140,24 +139,70 @@ html, body{
       </div>
     </div>
   </div>
-</body>
+  </body>
 </html>
 
 <script>
 
-$.fn.csb = function(){
-  var mainContent = $(this)[0];
-  var step  = 10;
-  var delay = 100;
+$.fn.csb = function(options){
+  var mainContent  = $(this)[0];
+  var self         = $(this)[0];
+  var step         = 10; // Default: User-defined
+  var buttonWidth  = 16; // Default: User-defined
+  var buttonHeight = 16; // Default: User-defined
+  var thumbWidth   = 16; // Default: User-defined
+  var thumbHeight  = -1; // Default: User-defined
+  var trackWidth   = 16; // Default: User-defined
   var newScrollPosition;
+  var cs;    // The custom scrollbar container
+  var up;    // The up button
+  var down;  // The down button
+  var track; // The background track
+  var thumb; // The grabbable piece
+  Init();
+
+  function Init(){
+    CheckOptions(options);
+
+    // Inject scrollbar
+    var html = $(self).parent().append(`
+      <div class="custom-scrollbar">
+        <div class="up"></div>
+        <div class="track"></div>
+        <div class="down"></div>
+        <div class="thumb"></div>
+      </div>`);
+    html.prepend(self);
+
+    // Set variables for referencing later
+    cs    = $(self).parent().find(".custom-scrollbar");
+    up    = $(self).parent().find(".up");
+    down  = $(self).parent().find(".down");
+    track = $(self).parent().find(".track");
+    thumb = $(self).parent().find(".thumb");
+
+    // Assign events
+    $(self).scroll(Scroll);
+    $(up).mousedown(ButtonClick);
+    $(down).mousedown(ButtonClick);
+    $(track).mousedown(ClickOnTrack);
+    $(thumb).mousedown(ClickOnThumb);
+
+    // Everything is now setup, this will update the scrollbar
+    $(self).trigger("scroll");
+  }
+
+  function CheckOptions(options){
+    console.log(options);
+    if(options["step"])         step         = options["step"];
+    if(options["buttonWidth"])  buttonWidth  = options["buttonWidth"];
+    if(options["buttonHeight"]) buttonHeight = options["buttonHeight"];
+    if(options["thumbWidth"])   thumbWidth   = options["thumbWidth"];
+    if(options["thumbHeight"])  thumbHeight  = options["thumbHeight"];
+    if(options["trackWidth"])   trackWidth   = options["trackWidth"];
+  }
 
   function Scroll(){
-    var cs    = $(this).parent().find(".custom-scrollbar");
-    var track = $(cs).find(".track");
-    var thumb = $(cs).find(".thumb");
-    var up    = $(cs).find(".up");
-    var down  = $(cs).find(".down");
-
     // offsetHeight: Stays the same = Height of the scrollable element               [335]
     // scrollHeight: Stays the same = Total height of all content within the element [882]
     // scrollTop:    Goes from 0 to (offsetHeight - scrollHeight)                    [0-547]
@@ -169,31 +214,33 @@ $.fn.csb = function(){
     var scrollbarWidth = this.offsetWidth - this.clientWidth + "px";
     $(this).css("padding-right", scrollbarWidth);
 
-    // These can be user-defined, but 16x16 is the defaults
-    var buttonWidth = 16;
-    var buttonHeight = 16;
+    $(up).css("height", buttonHeight);
+    $(down).css("height", buttonHeight);
 
     // Calculate the thumb height
-    var thumbWidth = 16;
-    var thumbHeight = 64;
-    $(thumb).css("width", thumbWidth + "px");
+    if(!thumbHeight)
+      var thumbHeight = 64;
+
+    $(thumb).css("width",  thumbWidth  + "px");
     $(thumb).css("height", thumbHeight + "px");
+
+    var thumbLeft = (trackWidth - thumbWidth) / 2;
+    $(thumb).css("left", thumbLeft + "px");
 
     var yoloSwag = this.offsetHeight - (buttonHeight * 2);
     $(track).css("height", yoloSwag + "px");
 
-    // Up and Down arrow buttons are both 16x16
-    // Thumb height is 16px high
-    // Therefore, decrease the track sliding length by 48 = 16*2 + 64
-    var offsetHeight2 = this.offsetHeight - 96;
+    // Decrease the track sliding length by the
+    // height of both buttons + height of thumb
+    var changeThisVarNameLater = buttonHeight * 2 + thumbHeight;
+    var offsetHeight2 = this.offsetHeight - changeThisVarNameLater;
 
-    // var scrollPercentage = this.scrollTop / (this.scrollHeight - this.offsetHeight) * this.offsetHeight;
     var delta = this.scrollTop / (this.scrollHeight - this.offsetHeight);
-    var scrollPercentage = delta * offsetHeight2 + 16; // 16 = Height of one button
+    var scrollPercentage = delta * offsetHeight2 + buttonHeight;
 
     $(thumb).css("top", scrollPercentage);
 
-    $(cs).css("width", "16px");               // USER-DEFINED!
+    $(cs).css("width", `${trackWidth}px`);               // USER-DEFINED!
     $(track).css("background-color", "gray"); // USER-DEFINED!
 
     if(delta == 0) $(up).css("background-color", "cyan");
@@ -219,14 +266,14 @@ $.fn.csb = function(){
 
     $(mainContent).stop().animate({
       scrollTop: newScrollPosition
-    }, delay);
+    }, 10);
   }
 
   function ButtonClick(event){
     event.preventDefault();
     ScrollWithButton.self = this;
     ScrollWithButton();
-    var timeout = setInterval(ScrollWithButton, delay);
+    var timeout = setInterval(ScrollWithButton, 10);
     $(document).mouseup(function(){clearInterval(timeout);});
   }
 
@@ -279,28 +326,9 @@ $.fn.csb = function(){
     TrackClick.self = $(this).parent().find(".track");
     TrackDrag();
   }
-
-  var qwe = this.parent().append(`
-    <div class="custom-scrollbar">
-      <div class="up"></div>
-      <div class="track"></div>
-      <div class="down"></div>
-      <div class="thumb"></div>
-    </div>`);
-
-  qwe.prepend(this);
-  $(this).scroll(Scroll);
-  var up    = $(this).parent().find(".up");
-  var down  = $(this).parent().find(".down");
-  var track = $(this).parent().find(".track");
-  var thumb = $(this).parent().find(".thumb");
-  $(up).mousedown(ButtonClick);
-  $(down).mousedown(ButtonClick);
-  $(track).mousedown(ClickOnTrack);
-  $(thumb).mousedown(ClickOnThumb);
-  $(this).trigger("scroll");
 }
 
-$("#main_content").csb();
+var options = {"step": 10, "buttonHeight": 32, "thumbWidth": 8};
+$("#main_content").csb(options);
 
 </script>
