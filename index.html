@@ -214,12 +214,17 @@ $.fn.csb = function(options){
     var scrollbarWidth = this.offsetWidth - this.clientWidth + "px";
     $(this).css("padding-right", scrollbarWidth);
 
-    $(up).css("height", buttonHeight);
+    var buttonLeft = (trackWidth - buttonWidth) / 2;
+    $(up).css("left",     buttonLeft);
+    $(up).css("width",    buttonWidth);
+    $(up).css("height",   buttonHeight);
+    $(down).css("left",   buttonLeft);
+    $(down).css("width",  buttonWidth);
     $(down).css("height", buttonHeight);
 
     // Calculate the thumb height
     if(!thumbHeight)
-      var thumbHeight = 64;
+      thumbHeight = 64;
 
     $(thumb).css("width",  thumbWidth  + "px");
     $(thumb).css("height", thumbHeight + "px");
@@ -328,7 +333,15 @@ $.fn.csb = function(options){
   }
 }
 
-var options = {"step": 10, "buttonHeight": 32, "thumbWidth": 8};
+var options = {
+  "step": 10,
+  "buttonWidth": 4,
+  "buttonHeight": 20,
+  "thumbWidth": 1,
+  "thumbHeight": 50,
+  "trackWidth": 50
+};
+
 $("#main_content").csb(options);
 
 </script>
